@@ -3,30 +3,62 @@ package game;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
+/**
+ * One of the naive solutions to this game http://www.flashbynight.com/drench/
+ * @author user
+ *
+ */
 public class ColoringGame {
 
+	/**  
+	 * The Size of the color point square Matrix which will have random colors from 1 to 6 filled in
+	 */
 	public static int MATRIX_SIZE = 14;
 
+	/**
+	 * The list color points at the boundary of the block of color points  starting from (0,0) which have the same color as (0,0)
+	 */
 	protected static List<ColorPoint> boundary = null;
 
+	/**
+	 * List of adjacent block of squares starting from (0,0) which have the same color as (0,0)
+	 */
 	protected static List<ColorPoint> sameColorBrothers = null;
 
+	/**
+	 * The randomly generated matrix with colors from 1 to 6
+	 */
 	protected static ColorPoint[][] colorGraph = new ColorPoint[MATRIX_SIZE][MATRIX_SIZE];
 
+	/**
+	 * List of points already checked by the calculateBoundaryAndSameColorBrothers method
+	 */
 	protected static List<ColorPoint> pointsAlreadyChecked = null;
-	
+	/**
+	 * If the getRandomColor method should generate a test input instead of random input
+	 * Look at the implementation of getRandomColor to see how test input works
+	 */
 	protected static boolean testMatrixGeneration = false;
+	/**
+	 * Index to the test input matrix
+	 */
 	protected static int testMatrixIndex = 0;
 	
+	/**
+	 * Main method
+	 * @param args
+	 */
 	public static void main(String[] args) {
 
 		populateColorGraph();
 		int numOfTries = 0;
 		do{
+			//TODO extremely inefficient to discard these lists every time and create them afresh
+			// this  is just a basic version of the program to test the idea, will fix it when I get time
 			boundary = new ArrayList<ColorPoint>();
 			sameColorBrothers = new ArrayList<ColorPoint>();
 			pointsAlreadyChecked = new ArrayList<ColorPoint>();
+			//of course the same color brothers starts with the main brother :)
 			sameColorBrothers.add(colorGraph[0][0]);
 			calculateBoundaryAndSameColorBrothers(colorGraph[0][0]);
 			printColorGraph(sameColorBrothers,boundary);
@@ -37,18 +69,26 @@ public class ColoringGame {
 	}
 
 	/**
-	 * 
+	 * This method finds the most frequent color in the list of boundary color points and uses that to color the whole
+	 * list of sameColorBrothers
+	 * TODO : The better way to do is to find the count of brothers of same color for each of the boundary color points and use the max in that list
+	 * to color the sameColorBrothers list
 	 * @param colorGraph
 	 */
 	protected static void colorTheGraph() {
+		//we have six colors so we have int array of 6 to keep track of count of boundary colors
 		int[] colorFrequency = {0,0,0,0,0,0};
 		Iterator<ColorPoint>  iter= null;
+		
 		if(boundary.size() > 0){
+			//count the colors in the boundary
 			iter= boundary.iterator();
 			while(iter.hasNext()){
 				ColorPoint p = iter.next();
 				colorFrequency[p.getColor()-1]++;
 			}
+			
+			//find the most frequent color in the boundary
 			int maxFreqColor = 0;
 			for(int i = 0 ; i < colorFrequency.length;i++){
 				if(colorFrequency[i] > maxFreqColor){
@@ -57,7 +97,7 @@ public class ColoringGame {
 			}
 			
 			System.out.println("Selecting the Maximum Frequency Color = "+maxFreqColor);
-			
+			//use the color found above to color all the sameColorBrothers
 			iter = sameColorBrothers.iterator();
 			while(iter.hasNext()){
 				ColorPoint p = iter.next();
@@ -68,13 +108,20 @@ public class ColoringGame {
 
 	}
 
-
+	/**
+	 * For a given color point we find all the adjacent color points of same color and add it to  sameColorBrothers global list
+	 * and all adjacent color points of different color to boundary global list
+	 * @param colorPoint
+	 */
 	protected static void calculateBoundaryAndSameColorBrothers(ColorPoint colorPoint) {
 		List<ColorPoint> adjacentPointsForColorPoint = null;
 
 		adjacentPointsForColorPoint = getAdjacentColoringPoints(colorPoint
 				.getX(), colorPoint.getY());
 
+		//need to make sure we don't go in a infinite loop checking the same thing we have checked before
+		//obviously every checked point is either in the sameColorBrothers list or boundary list, so we check only
+		//points we have not checked before
 		List<ColorPoint> pointsToCheckFurther = getInAnotInB(getInAnotInB(adjacentPointsForColorPoint, sameColorBrothers),boundary);
 
 		Iterator<ColorPoint> iter = pointsToCheckFurther.iterator();
@@ -82,6 +129,7 @@ public class ColoringGame {
 			ColorPoint p = iter.next();
 			if(p.getColor() == colorGraph[0][0].getColor()){
 				sameColorBrothers.add(p);
+				//since if it is same color we need to go further and find the boundary,we recursively call the calculateBoundaryAndSameColorBrothers
 				calculateBoundaryAndSameColorBrothers(p);
 			}else{
 				boundary.add(p);
@@ -90,6 +138,13 @@ public class ColoringGame {
 	
 	}
 
+	/**
+	 * As the name says list of items in A but not in B
+	 * 
+	 * @param adjacentPointsForColorPoint
+	 * @param adjacentPointsForComingFromPoint
+	 * @return
+	 */
 	protected static List<ColorPoint> getInAnotInB(
 			List<ColorPoint> adjacentPointsForColorPoint,
 			List<ColorPoint> adjacentPointsForComingFromPoint) {
@@ -108,6 +163,13 @@ public class ColoringGame {
 		return inAnotInB;
 	}
 
+	/**
+	 * Gets the adjacent points which are valid in the matrix
+	 * 
+	 * @param xPosition
+	 * @param yPosition
+	 * @return
+	 */
 	protected static List<ColorPoint> getAdjacentColoringPoints(int xPosition,
 			int yPosition) {
 		List<ColorPoint> adjacentColorPoints = new ArrayList<ColorPoint>();
@@ -180,6 +242,11 @@ public class ColoringGame {
 
 	}
 
+	/**
+	 * Prints the content of the matrix with elements in list surrounded by []
+	 * 
+	 * @param list
+	 */
 	protected static void printColorGraph(List<ColorPoint> list) {
 		System.out.println();
 		for (int i = 0; i < colorGraph.length; i++) {
@@ -197,6 +264,12 @@ public class ColoringGame {
 
 	}
 
+	/**
+	 * Prints the content of the matrix with {} around elements in list1 and [] around items in list2
+	 * 
+	 * @param list1
+	 * @param list2
+	 */
 	protected static void printColorGraph(List<ColorPoint> list1, List<ColorPoint> list2 ) {
 		System.out.println();
 		for (int i = 0; i < colorGraph.length; i++) {
