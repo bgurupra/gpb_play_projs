@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ColoringGame {
 
-	public static int MATRIX_SIZE = 3;
+	public static int MATRIX_SIZE = 14;
 
 	protected static List<ColorPoint> boundary = null;
 
@@ -14,21 +14,26 @@ public class ColoringGame {
 
 	protected static ColorPoint[][] colorGraph = new ColorPoint[MATRIX_SIZE][MATRIX_SIZE];
 
+	protected static List<ColorPoint> pointsAlreadyChecked = null;
+	
+	protected static boolean testMatrixGeneration = false;
+	protected static int testMatrixIndex = 0;
+	
 	public static void main(String[] args) {
 
 		populateColorGraph();
-		//printColorGraph();
-		int k = 0 ;
+		int numOfTries = 0;
 		do{
 			boundary = new ArrayList<ColorPoint>();
 			sameColorBrothers = new ArrayList<ColorPoint>();
+			pointsAlreadyChecked = new ArrayList<ColorPoint>();
 			sameColorBrothers.add(colorGraph[0][0]);
-			calculateBoundaryAndSameColorBrothers(null,colorGraph[0][0]);
+			calculateBoundaryAndSameColorBrothers(colorGraph[0][0]);
 			printColorGraph(sameColorBrothers,boundary);
 			colorTheGraph();
-			//printColorGraph();
-			k++;
-		}while(boundary.size() != 0 && k < 4);
+			numOfTries++;
+		}while(boundary.size() != 0);
+		System.out.println("Finished in "+numOfTries+" number of colorings");
 	}
 
 	/**
@@ -44,52 +49,40 @@ public class ColoringGame {
 				ColorPoint p = iter.next();
 				colorFrequency[p.getColor()-1]++;
 			}
-		}
-		int maxFreqColor = -1;
-		for(int i = 0 ; i < colorFrequency.length;i++){
-			//System.out.println("Color = "+(i+1)+"Color Frequency = "+ colorFrequency[i]);
-			if(colorFrequency[i] > maxFreqColor){
-				maxFreqColor = i+1;
+			int maxFreqColor = 0;
+			for(int i = 0 ; i < colorFrequency.length;i++){
+				if(colorFrequency[i] > maxFreqColor){
+					maxFreqColor = i+1;
+				}
 			}
-		}
-		
-		System.out.println("Maximum Frequency Color = "+maxFreqColor);
-		
-		iter = sameColorBrothers.iterator();
-		while(iter.hasNext()){
-			ColorPoint p = iter.next();
-			p.setColor(maxFreqColor);
-		}
+			
+			System.out.println("Selecting the Maximum Frequency Color = "+maxFreqColor);
+			
+			iter = sameColorBrothers.iterator();
+			while(iter.hasNext()){
+				ColorPoint p = iter.next();
+				p.setColor(maxFreqColor);
+			}
+
+		} 
+
 	}
 
 
-	protected static void calculateBoundaryAndSameColorBrothers(
-			ColorPoint comingFromPoint, ColorPoint colorPoint) {
+	protected static void calculateBoundaryAndSameColorBrothers(ColorPoint colorPoint) {
 		List<ColorPoint> adjacentPointsForColorPoint = null;
-		List<ColorPoint> adjacentPointsForComingFromPoint = null;
-		printColorGraph(sameColorBrothers,boundary);
-		if (comingFromPoint != null) {
-			adjacentPointsForComingFromPoint = getAdjacentColoringPoints(
-					comingFromPoint.getX(), comingFromPoint.getY());
-			//printColorGraph(adjacentPointsForComingFromPoint);
-			adjacentPointsForComingFromPoint.add(comingFromPoint);
-		}
 
 		adjacentPointsForColorPoint = getAdjacentColoringPoints(colorPoint
 				.getX(), colorPoint.getY());
-		//printColorGraph(adjacentPointsForColorPoint);
 
-		List<ColorPoint> pointsToCheckFurther = comingFromPoint == null ? adjacentPointsForColorPoint
-				: getInAnotInB(adjacentPointsForColorPoint,
-						adjacentPointsForComingFromPoint);
-		//printColorGraph(pointsToCheckFurther);
+		List<ColorPoint> pointsToCheckFurther = getInAnotInB(getInAnotInB(adjacentPointsForColorPoint, sameColorBrothers),boundary);
 
 		Iterator<ColorPoint> iter = pointsToCheckFurther.iterator();
 		while(iter.hasNext()){
 			ColorPoint p = iter.next();
 			if(p.getColor() == colorGraph[0][0].getColor()){
 				sameColorBrothers.add(p);
-				calculateBoundaryAndSameColorBrothers(colorPoint,p);
+				calculateBoundaryAndSameColorBrothers(p);
 			}else{
 				boundary.add(p);
 			}
@@ -247,9 +240,16 @@ public class ColoringGame {
 	 * @return
 	 */
 	protected static int getRandomColor() {
+		int[] testMatrix = {1,3,5,6};
+		
+		if(testMatrixGeneration){
+			return testMatrix[testMatrixIndex++];
+			
+			
+		}
 		double rand = Math.random();
 		int color = 1;
-/*		if (rand > 0 && rand < .15) {
+		if (rand > 0 && rand < .15) {
 			color = 1;
 		} else if (rand >= .15 && rand < .3) {
 			color = 2;
@@ -262,7 +262,6 @@ public class ColoringGame {
 		} else if (rand >= .75 && rand < 1) {
 			color = 6;
 		}
-*/
 		return color;
 	}
 

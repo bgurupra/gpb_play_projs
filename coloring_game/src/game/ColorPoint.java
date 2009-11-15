@@ -1,32 +1,17 @@
 package game;
 
-import java.util.List;
 
 public class ColorPoint {
 	
 	private int x = -1;
 	private int y = -1;
 	private int color = -1;
-	private List<ColorPoint> sameColorBrothers = null;
-	private List<ColorPoint> boundaryBrothers = null;
 	
 	public ColorPoint(int X, int Y){
 		setX(X);
 		setY(Y);
 	}
 	
-	public List<ColorPoint> getBoundaryBrothers() {
-		return boundaryBrothers;
-	}
-	public void setBoundaryBrothers(List<ColorPoint> boundaryBrothers) {
-		this.boundaryBrothers = boundaryBrothers;
-	}
-	public List<ColorPoint> getSameColorBrothers() {
-		return sameColorBrothers;
-	}
-	public void setSameColorBrothers(List<ColorPoint> sameColorBrothers) {
-		this.sameColorBrothers = sameColorBrothers;
-	}
 	public int getX() {
 		return x;
 	}
